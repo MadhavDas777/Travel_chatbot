@@ -32,12 +32,64 @@ def customLLMBot(user_input, history):
 
     return LLM_reply
 
-iface = gradio.ChatInterface(customLLMBot,
-                     chatbot=gradio.Chatbot(height=300),
-                     textbox=gradio.Textbox(placeholder="Ask me a question related to Travel"),
-                     title="TravelGuide ChatBot",
-                     description="Chat bot for Travel Related Questions",
-                     theme="soft",
-                     examples=["hi","Suggest Hotel", "Places to visit"]
-                     )
+css = """
+.app, body {
+    background-color: #087f23 !important;  
+    color: white !important;              
+}
+
+.gr-chatbot {
+    background-color: white !important;    
+    border-radius: 12px !important;
+}
+
+.gr-textbox textarea {
+    background-color: white !important;    
+    border-radius: 12px !important;
+    
+    color: black !important;               
+}
+
+.gr-button {
+    color: black !important;               
+}
+"""
+
+iface = gradio.ChatInterface(
+    fn=customLLMBot,
+
+    chatbot=gradio.Chatbot(
+        type="messages",
+        height=450,
+        show_copy_button=True,
+        avatar_images=(
+            "https://img.icons8.com/color/96/airplane-take-off.png",
+            "https://img.icons8.com/color/96/robot.png"
+        ),
+    ),
+
+    textbox=gradio.Textbox(
+        placeholder=" Ask me a question related to Travel...",
+        show_label=False,
+        lines=1,
+    ),
+
+    title=" Travel Guide ChatBot",
+    #description="Your AI-powered travel companion.",
+
+    examples=[
+        "Suggest a budget-friendly hotel",
+        "Best places to visit in Kerala",
+        "Plan a 3-day trip to Ooty",
+        "Best time to visit Manali"
+    ],
+
+    theme=gradio.themes.Soft(
+        primary_hue="green",
+        secondary_hue="lime",
+        font=[gradio.themes.GoogleFont("Poppins"), "system-ui"],
+    ),
+
+    css=css
+)
 iface.launch(share=True)
