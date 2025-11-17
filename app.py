@@ -1,70 +1,43 @@
-import gradio as gr
-from huggingface_hub import InferenceClient
+import gradio
+from groq import Groq
 
-
-def respond(
-    message,
-    history: list[dict[str, str]],
-    system_message,
-    max_tokens,
-    temperature,
-    top_p,
-    hf_token: gr.OAuthToken,
-):
-    """
-    For more information on `huggingface_hub` Inference API support, please check the docs: https://huggingface.co/docs/huggingface_hub/v0.22.2/en/guides/inference
-    """
-    client = InferenceClient(token=hf_token.token, model="openai/gpt-oss-20b")
-
-    messages = [{"role": "system", "content": system_message}]
-
-    messages.extend(history)
-
-    messages.append({"role": "user", "content": message})
-
-    response = ""
-
-    for message in client.chat_completion(
-        messages,
-        max_tokens=max_tokens,
-        stream=True,
-        temperature=temperature,
-        top_p=top_p,
-    ):
-        choices = message.choices
-        token = ""
-        if len(choices) and choices[0].delta.content:
-            token = choices[0].delta.content
-
-        response += token
-        yield response
-
-
-"""
-For information on how to customize the ChatInterface, peruse the gradio docs: https://www.gradio.app/docs/chatinterface
-"""
-chatbot = gr.ChatInterface(
-    respond,
-    type="messages",
-    additional_inputs=[
-        gr.Textbox(value="You are a friendly Chatbot.", label="System message"),
-        gr.Slider(minimum=1, maximum=2048, value=512, step=1, label="Max new tokens"),
-        gr.Slider(minimum=0.1, maximum=4.0, value=0.7, step=0.1, label="Temperature"),
-        gr.Slider(
-            minimum=0.1,
-            maximum=1.0,
-            value=0.95,
-            step=0.05,
-            label="Top-p (nucleus sampling)",
-        ),
-    ],
+client = Groq(
+    api_key="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",
 )
+def initialize_messages():
+    return [{
+        "role": "system",
+        "content": """You are a knowledgeable and friendly travel guide
+        chatbot. Your role is to assist users by providing accurate travel
+        information, destination suggestions, itineraries, cultural tips,
+        transportation guidance, and safety advice. Always respond in a
+        clear, helpful, and welcoming manner, ensuring the information is
+        suitable for travelers."""
+    }]
 
-with gr.Blocks() as demo:
-    with gr.Sidebar():
-        gr.LoginButton()
-    chatbot.render()
+messages_prmt = initialize_messages()
 
+def customLLMBot(user_input, history):
+    global messages_prmt
 
-if __name__ == "__main__":
-    demo.launch()
+    messages_prmt.append({"role": "user", "content": user_input})
+
+    response = client.chat.completions.create(
+        messages=messages_prmt,
+        model="llama-3.3-70b-versatile",
+    )
+    print(response)
+    LLM_reply = response.choices[0].message.content
+    messages_prmt.append({"role": "assistant", "content": LLM_reply})
+
+    return LLM_reply
+
+iface = gradio.ChatInterface(customLLMBot,
+                     chatbot=gradio.Chatbot(height=300),
+                     textbox=gradio.Textbox(placeholder="Ask me a question related to Travel"),
+                     title="TravelGuide ChatBot",
+                     description="Chat bot for Travel Related Questions",
+                     theme="soft",
+                     examples=["hi","Suggest Hotel", "Places to visit"]
+                     )
+iface.launch(share=True)
