@@ -1,0 +1,7 @@
+Groq : Groq is literally built different. 
+It’s the only custom-built inference chip that fuels 
+developers with the performance they need at a cost that doesn’t hold them back.
+
+Gradio :Gradio, an open-source Python package, 
+offers a solution by enabling developers to create interactive
+web interfaces for machine learning models with minimal code.
